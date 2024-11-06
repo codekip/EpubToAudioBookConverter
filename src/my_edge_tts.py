@@ -22,7 +22,7 @@ def load_voices():
             data = json.load(file)
 
     # Create a list with all "ShortName"
-    available_voices_short_names = [voice["ShortName"] for voice in data]
+    available_voices_short_names = [voice["ShortName"] for voice in data if "en-GB" in voice["ShortName"] or "en-KE" in voice["ShortName"]]
 
     return available_voices_short_names
 
