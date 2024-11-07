@@ -1,17 +1,20 @@
-import os
-import tkinter as tk
-from tkinter import filedialog
-import customtkinter
-import customtkinter as ctk
-from CTkListbox import *
-
 # import CTkListbox
 import json
-import file_management
-import my_edge_tts
-import epub_reader
-import lists
+import os
+import tkinter as tk
+import warnings
+from tkinter import filedialog
 
+import customtkinter as ctk
+from CTkListbox import CTkListbox
+
+import epub_reader
+import file_management
+import lists
+import my_edge_tts
+
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 class EpubAudioConverterUI(tk.Tk):
     def __init__(self):
@@ -19,7 +22,7 @@ class EpubAudioConverterUI(tk.Tk):
         self.title("EPUB (Electronic Publication) to MP3 (Audio Book) converter")
 
         self.geometry("1024x1024")
-        customtkinter.set_default_color_theme(
+        ctk.set_default_color_theme(
             "green"
         )  # Themes: "blue" (standard), "green", "dark-blue"
 
@@ -37,7 +40,7 @@ class EpubAudioConverterUI(tk.Tk):
         self.chapter_listbox_last_selection = None
         self.default_pad_x = 10
         self.default_pad_y = 10
-        self.output_in_one_file_var = customtkinter.StringVar(value="off")
+        self.output_in_one_file_var = ctk.StringVar(value="off")
 
         # Load previous UI status
         self.load_ui_status()
@@ -82,7 +85,7 @@ class EpubAudioConverterUI(tk.Tk):
         row_number += 1
         self.output_file_label = self._create_label("Output File Name:", row_number)
         self.output_file_entry = self._create_entry(self.output_file_name, row_number)
-        self.output_in_one_file = customtkinter.CTkCheckBox(
+        self.output_in_one_file = ctk.CTkCheckBox(
             self.main_frame,
             text="Single MP3 file",
             command=self._output_in_one_file_event,
@@ -129,7 +132,7 @@ class EpubAudioConverterUI(tk.Tk):
         # Chapter List
         row_number += 1
 
-        small_font = customtkinter.CTkFont(size=11)
+        small_font = ctk.CTkFont(size=11)
 
         self.chapter_list_label = self._create_label("Chapter List:", row_number)
         # https://github.com/Akascape/CTkListbox
@@ -224,15 +227,15 @@ class EpubAudioConverterUI(tk.Tk):
         self.log_label.configure(text=text)
         self.main_frame.update()
 
-    def _update_pitch_value_label(self, *args):
+    def _update_pitch_value_label(self):
         pitch = int(self.pitch_hz.get())
         self.pitch_value_label.configure(text=f"{pitch}Hz")
 
-    def _update_playback_speed_label(self, *args):
+    def _update_playback_speed_label(self):
         playback_speed = int(self.playback_speed_percentage.get())
         self.playback_speed_value_label.configure(text=f"{playback_speed}%")
 
-    def _update_volume_percentage_label(self, *args):
+    def _update_volume_percentage_label(self):
         volume = int(self.volume_percentage.get())
         self.volume_value_label.configure(text=f"{volume}%")
 
@@ -260,7 +263,7 @@ class EpubAudioConverterUI(tk.Tk):
             if file_path.lower().endswith(".epub"):
                 self.epub_file_path.set(file_path)
 
-    def _output_in_one_file_event(self, event):
+    def _output_in_one_file_event(self):
         self.output_in_one_file_var.get()
 
     def _display_selected_chapter_text(self, event):
@@ -353,7 +356,7 @@ class EpubAudioConverterUI(tk.Tk):
 
     def load_ui_status(self):
         try:
-            with open("../ui_status.json", "r") as file:
+            with open("../ui_status.json", "r", encoding="utf-8") as file:
                 ui_status = json.load(file)
                 self.epub_file_path.set(ui_status["epub_file_path"])
                 self.voice_var.set(ui_status["voice_var"])
@@ -386,7 +389,7 @@ class EpubAudioConverterUI(tk.Tk):
             "output_in_one_file": self.output_in_one_file.get(),
             "geometry": self.geometry(),
         }
-        with open("../ui_status.json", "w") as file:
+        with open("../ui_status.json", "w", encoding="utf-8") as file:
             json.dump(ui_status, file)
 
     def on_closing(self):
@@ -398,7 +401,7 @@ class EpubAudioConverterUI(tk.Tk):
 
         self.load_epub_file_chapters()
 
-    def _delete_chapter_list(self):
+    def _delete_chapter_list(self, *args):
         if self.chapter_listbox.size() > 0:
             self._log("Deleting chapter list...")
 
@@ -414,7 +417,7 @@ class EpubAudioConverterUI(tk.Tk):
             self.chapter_text_by_filename[file_name] = text
             self.chapter_listbox.insert(tk.END, file_name)
 
-    def load_epub_file_chapters(self):
+    def load_epub_file_chapters(self, *args):
         epub_file_path = self.epub_file_path.get()
 
         if file_management.file_exists(epub_file_path):
