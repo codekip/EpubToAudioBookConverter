@@ -16,6 +16,7 @@ import my_edge_tts
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+
 class EpubAudioConverterUI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -29,7 +30,10 @@ class EpubAudioConverterUI(tk.Tk):
         # Variables
         self.epub_file_path = tk.StringVar()
         self.voice_var = tk.StringVar()
-        self.output_directory_path = tk.StringVar()
+        # self.output_directory_path = tk.StringVar()
+        self.output_directory_path = tk.StringVar(
+            value=r"C:\Users\nicks\Downloads\EpubAudios"
+        )
         self.output_file_name = tk.StringVar()
         self.playback_speed_percentage = tk.DoubleVar(value=100)
         self.volume_percentage = tk.DoubleVar(value=100)

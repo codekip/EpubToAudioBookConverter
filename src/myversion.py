@@ -15,6 +15,9 @@ import my_edge_tts
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+os.environ["TCL_LIBRARY"] = r"C:\Program Files\Python313\tcl\tcl8.6"
+os.environ["TK_LIBRARY"] = r"C:\Program Files\Python313\tcl\tk8.6"
+
 
 class EpubAudioConverterUI(tk.Tk):
     def __init__(self):
@@ -39,7 +42,13 @@ class EpubAudioConverterUI(tk.Tk):
     def _initialize_variables(self):
         self.epub_file_path = tk.StringVar()
         self.voice_var = tk.StringVar()
-        self.output_directory_path = tk.StringVar()
+        # self.output_directory_path = tk.StringVar()
+        self.output_directory_path = tk.StringVar(
+            value=r"C:\Users\nicks\Downloads\EpubAudios"
+        )
+        print(
+            f"Initialized output directory: {self.output_directory_path.get()}"
+        )  # Debug
         self.output_file_name = tk.StringVar()
         self.playback_speed_percentage = tk.DoubleVar(value=100)
         self.volume_percentage = tk.DoubleVar(value=100)
@@ -226,8 +235,13 @@ class EpubAudioConverterUI(tk.Tk):
             self.epub_file_path.set(file_path)
 
     def _browse_output_directory(self):
-        directory_path = filedialog.askdirectory()
-        directory_path = os.path.normpath(directory_path)
+        self.output_directory_path.set(
+            r"C:\Users\nicks\Downloads\EpubAudios"
+        )  # Reset explicitly
+        current_dir = self.output_directory_path.get()
+        print(f"Forced directory before browsing: {current_dir}")  # Debug
+
+        directory_path = filedialog.askdirectory(initialdir=current_dir)
         if directory_path:
             self.output_directory_path.set(directory_path)
 
@@ -278,9 +292,18 @@ class EpubAudioConverterUI(tk.Tk):
     def _generate(self):
         file_name = self.output_file_name.get()
 
+        # Ensure the output directory exists
+        output_dir = self.output_directory_path.get()
+        print(f"Output directory: {output_dir}")  # Debug
+        if not os.path.exists(output_dir):
+            print(f"Creating directory: {output_dir}")  # Debug
+            os.makedirs(output_dir)
+
         if self.output_in_one_file_var.get() == "on":
             total = 1
-            chapter_files = [self.chapter_listbox.get(i) for i in self.chapter_listbox.curselection()]
+            chapter_files = [
+                self.chapter_listbox.get(i) for i in self.chapter_listbox.curselection()
+            ]
             chapter_texts = [
                 str(self.chapter_text_by_filename[chapter_file]).strip()
                 for chapter_file in chapter_files
@@ -298,7 +321,6 @@ class EpubAudioConverterUI(tk.Tk):
 
         file_management.open_directory_in_explorer(self.output_directory_path.get())
         self._log("Audio book successfully created!")
-
 
     def _generate_one_mp3_file(self, text, file_name, index, total):
         temporary_file_path = os.path.normpath(
@@ -421,4 +443,3 @@ if __name__ == "__main__":
         app.mainloop()
     except (FileNotFoundError, IOError, ValueError) as e:
         print(f"An error occurred: {e}")
-
