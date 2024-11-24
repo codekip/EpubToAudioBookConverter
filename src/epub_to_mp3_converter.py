@@ -22,7 +22,7 @@ class EpubAudioConverterUI(tk.Tk):
         super().__init__()
         self.title("EPUB (Electronic Publication) to MP3 (Audio Book) converter")
 
-        self.geometry("1024x1024")
+        self.geometry("800x800")
         ctk.set_default_color_theme(
             "green"
         )  # Themes: "blue" (standard), "green", "dark-blue"
