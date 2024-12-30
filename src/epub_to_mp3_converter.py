@@ -1,12 +1,12 @@
 # import CTkListbox
 import json
 import os
-import playsound
 import tkinter as tk
 import warnings
 from tkinter import filedialog
 
 import customtkinter as ctk
+import playsound
 from CTkListbox import CTkListbox
 
 import epub_reader
@@ -259,6 +259,8 @@ class EpubAudioConverterUI(tk.Tk):
         directory_path = filedialog.askdirectory()
         directory_path = os.path.normpath(directory_path)
         if directory_path:
+            # Create all folders in the specified path if they don't exist
+            os.makedirs(directory_path, exist_ok=True)
             self.output_directory_path.set(directory_path)
 
     def _on_enter(self, event):
@@ -333,33 +335,45 @@ class EpubAudioConverterUI(tk.Tk):
         self._log("Audio book successfully created !")
 
     def _generate_one_mp3_file(self, text, file_name, index, total):
-        temporary_file_path = os.path.normpath(
-            file_management.create_temp_text_file(text)
-        )
+        # Ensure the temporary file path exists
+        temporary_file_path = os.path.normpath(file_management.create_temp_text_file(text))
 
+        # Generate a unique MP3 file name
         if index == total:
             file_name = f"{file_name}.mp3"
         else:
             file_name = f"{file_name} - {str(index).zfill(3)}.mp3"
 
+        # Full path for the output MP3 file
         mp3_file_path = os.path.normpath(
             os.path.join(self.output_directory_path.get(), file_name)
         )
 
-        self._log(
-            f"Generating {str(index).zfill(3)}/{str(total).zfill(3)} : {mp3_file_path}"
-        )
+        # Ensure the output directory exists
+        output_dir = os.path.dirname(mp3_file_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+            self._log(f"Created output directory: {output_dir}")
 
-        my_edge_tts.generate_mp3_file(
-            temporary_file_path,
-            mp3_file_path,
-            self.voice_var.get(),
-            int(self.playback_speed_percentage.get()),
-            int(self.volume_percentage.get()),
-            int(self.pitch_hz.get()),
-        )
+        self._log(f"Generating {str(index).zfill(3)}/{str(total).zfill(3)}: {mp3_file_path}")
 
-        file_management.delete_temp_file(temporary_file_path)
+        # Generate MP3 file using edge-tts
+        try:
+            my_edge_tts.generate_mp3_file(
+                temporary_file_path,
+                mp3_file_path,
+                self.voice_var.get(),
+                int(self.playback_speed_percentage.get()),
+                int(self.volume_percentage.get()),
+                int(self.pitch_hz.get()),
+            )
+            self._log(f"Generated MP3 file: {mp3_file_path}")
+        except Exception as e:
+            self._log(f"Error generating MP3 file: {e}")
+        finally:
+            # Delete temporary file
+            file_management.delete_temp_file(temporary_file_path)
+
 
     def load_ui_status(self):
         try:
@@ -401,8 +415,8 @@ class EpubAudioConverterUI(tk.Tk):
 
     def on_closing(self):
         # Path to the output directory
-        output_dir = self.output_directory_path.get()
-
+        output_dir = "." #self.output_directory_path.get()
+        print(output_dir)
         # Log the cleanup process
         self._log("Cleaning up sample audio files...")
 
