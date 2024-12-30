@@ -1,6 +1,7 @@
 # import CTkListbox
 import json
 import os
+import playsound
 import tkinter as tk
 import warnings
 from tkinter import filedialog
@@ -73,6 +74,9 @@ class EpubAudioConverterUI(tk.Tk):
         )
         self.voice_dropdown.grid(row=row_number, column=1, sticky="we")
 
+        self.sample_button = self._create_button(
+            "Listen to sample", row_number, self._play_sample
+        )
         # Output Directory Path
         row_number += 1
         self.output_directory_label = self._create_label(
@@ -84,7 +88,6 @@ class EpubAudioConverterUI(tk.Tk):
         self.output_directory_button = self._create_button(
             "Browse", row_number, self._browse_output_directory
         )
-
         # Output File Name
         row_number += 1
         self.output_file_label = self._create_label("Output File Name:", row_number)
@@ -397,6 +400,25 @@ class EpubAudioConverterUI(tk.Tk):
             json.dump(ui_status, file)
 
     def on_closing(self):
+        # Path to the output directory
+        output_dir = self.output_directory_path.get()
+
+        # Log the cleanup process
+        self._log("Cleaning up sample audio files...")
+
+        # Iterate through files in the output directory
+        if os.path.exists(output_dir):
+            for file_name in os.listdir(output_dir):
+                # Check if the file starts with "sample_audio" and ends with ".mp3"
+                if file_name.startswith("sample_audio") and file_name.endswith(".mp3"):
+                    file_path = os.path.join(output_dir, file_name)
+                    try:
+                        os.remove(file_path)
+                        self._log(f"Deleted: {file_path}")
+                    except Exception as e:
+                        self._log(f"Error deleting file {file_path}: {e}")
+
+        # Save UI status and close the application
         self.save_ui_status()
         self.destroy()
 
@@ -461,6 +483,54 @@ class EpubAudioConverterUI(tk.Tk):
     def _unselect_all_chapters(self):
         for i in range(self.chapter_listbox.size()):
             self.chapter_listbox.deactivate(i)
+
+    def _play_sample(self):
+        # from playsound import playsound
+
+        selected_voice = self.voice_var.get()
+        if not selected_voice:
+            self._log("Please select a voice.")
+            return
+
+        sample_text = "The quick brown fox jumps over the lazy dog."
+        # Create a unique filename for the sample based on the selected voice
+        sample_mp3_path = os.path.normpath(
+            os.path.join(
+                self.output_directory_path.get(), f"sample_audio_{selected_voice}.mp3"
+            )
+        )
+        temporary_file_path = os.path.normpath(
+            os.path.join(self.output_directory_path.get(), "sample_text.txt")
+        )
+
+        # Save sample text to a temporary file
+        with open(temporary_file_path, "w", encoding="utf-8") as file:
+            file.write(sample_text)
+
+        # Generate the MP3 file
+        try:
+            self._log(f"Generating sample audio with voice: {selected_voice}...")
+            my_edge_tts.generate_mp3_file(
+                temporary_file_path,
+                sample_mp3_path,
+                selected_voice,
+                int(self.playback_speed_percentage.get()),
+                int(self.volume_percentage.get()),
+                int(self.pitch_hz.get()),
+            )
+            self._log(f"Sample audio saved to {sample_mp3_path}.")
+
+            # Play the generated MP3 file using playsound
+            self._log("Playing sample audio...")
+            self._log(f"Playing file: {sample_mp3_path}")
+            playsound.playsound(sample_mp3_path)
+
+        except Exception as e:
+            self._log(f"Error generating or playing sample audio: {e}")
+
+        # Clean up temporary file
+        if os.path.exists(temporary_file_path):
+            os.remove(temporary_file_path)
 
 
 if __name__ == "__main__":
